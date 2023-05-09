@@ -1,0 +1,248 @@
+#!/usr/bin/perl
+# Version: 1.0
+# Description: A program to test typing speed and accuracy
+#
+
+use strict;
+use warnings;
+
+use Term::ReadKey;
+use Term::ReadLine;
+use Time::HiRes qw( time );
+use Chart::Gnuplot;
+
+use lib 'lib';
+require "layouts.pl";
+require "wordlists.pl";
+
+
+# Menu:
+my $layout_name = "qwerty";
+my $wordlist_file = "new";
+
+my @words;
+my $layout;
+
+menu();
+# Menu:
+# - Start test
+#   run test with $layout and $text
+# - Select layout
+#   choose layout help to display from layouts.json keys and set $layout to the value
+#   default to none
+# - Select words list
+#   choose from lists folder and set $text to the value
+#   default to new (new list creation before start on it)
+# - Create words list
+#   Create randomized words list and set $wordlist to it
+
+sub menu {
+    print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
+    print "Type-pl menu:\n\n";
+    print "1. Start test\n";
+    print "2. Select layout ($layout_name)\n";
+    print "3. Select words list ($wordlist_file)\n";
+    print "4. Create words list\n";
+    print "5. Exit\n";
+
+    ReadMode('cbreak');
+    my $key = Term::ReadKey::ReadKey(0);
+    ReadMode(0);
+    if ($key eq 1) {
+        $layout = get_layout($layout_name);
+        @words = get_word_list($wordlist_file);
+        start_test();
+    } elsif ($key eq 2) {
+        $layout_name = choose_layout();
+        menu();
+    } elsif ($key eq 3) {
+        $wordlist_file = choose_word_list();
+        menu();
+    } elsif ($key eq 4) {
+        random_creation();
+        menu();
+    } elsif ($key eq 5) {
+        exit;
+    } else {
+        menu();
+    }
+}
+
+sub start_test {
+
+    my %char_times;
+    my %incorrect_chars;
+    my $start_time = 0;
+    my $prev_time = $start_time;
+    my $total_time = 0;
+    my $total_chars = 0;
+    my $correct_chars = 0;
+
+    print "\e[2J\e[H";
+    print $layout;
+    print "\n***********************************************\n";
+    print "Press 'esc' anytime to exit and 'tab' to restart.";
+    print "\n***********************************************\n";    
+
+    my @lines = split /(.{80})/, join(" ", @words);
+
+    foreach my $line (@lines) {
+        # Display the line to type
+        print "\n$line\n";
+
+        # Prompt the user to type the line
+        my $input = '';
+        my $char = '';
+        my $prev = '';
+        for (my $i = 0; $i < length($line); $i++) {
+            # Display the character to type
+            $char = substr($line, $i, 1);
+            if (defined $layout) {
+                update_layer($char, $prev);
+                $prev = $char;
+            }
+
+            # Prompt the user to type the character
+            my $char_input = readChar();
+            if ($char_input eq "\e") {
+                menu();
+            } elsif ($char_input eq "\t") {
+                start_test();
+            }
+            $input .= $char_input;
+
+            # Calculate the time taken to type the character
+
+            if ($start_time eq 0) {
+                $start_time = time;
+                $prev_time = $start_time;
+            }
+            my $char_time = time - $prev_time;
+            $prev_time = time;
+
+            #  Add the time to the total time if the character was typed correctly
+            #  Otherwise, add the time to the total time and add the character to the list of incorrect characters
+            if (not exists $incorrect_chars{$char}) {
+                $incorrect_chars{$char} = 0;
+            }
+            if ($char eq $char_input) {
+                if (exists $char_times{$char}) {
+                    push @{$char_times{$char}}, $char_time;
+                } else {
+                    $char_times{$char} = [$char_time];
+                }
+                # Display the character in green
+                print "\e[32m$char\e[0m";
+            } else {
+                # Add the character to the list of incorrect characters
+                $incorrect_chars{$char}++;
+                # Display the character in red
+                print "\e[31m$char\e[0m";
+            }
+
+            # Count the number of characters
+            $total_chars++;
+
+            # Count the number of correct characters
+            if ($char eq $char_input) {
+                $correct_chars++;
+            }
+        }
+    }
+
+    print  "\n--------------------\n";
+    printf "Time: %.2f seconds\n", time - $start_time;
+    printf "Speed: %.2f CPM\n", 60 * ($total_chars / (time - $start_time));
+    printf "Speed: %.2f WPM\n", 60 * (scalar(@words) / (time - $start_time));
+    print  "--------------------\n";
+    printf "Errors: %s\n", scalar(keys %incorrect_chars);
+    printf "Accuracy: %.2f%%\n", 100 * ($correct_chars / $total_chars);
+    printf "Error rate: %.2f%%\n", 100 * (scalar(keys %incorrect_chars) / $total_chars);
+    print  "--------------------\n";
+    # Display the results
+    foreach my $char (sort keys %char_times) {
+        my $char_avg_time = sprintf("%.2f", average(@{$char_times{$char}}));
+        my $char_accuracy = sprintf("%.2f", 100 * (1 - ($incorrect_chars{$char} /
+            (scalar(@{$char_times{$char}}) + $incorrect_chars{$char}))));
+        printf "%s: %s seconds per character (%s%% accuracy)\n", $char, $char_avg_time, $char_accuracy;
+    }
+    print  "--------------------\n";
+    # Restart or return to main menu
+    print "Press 'r' to restart or any other key to return to main menu.\n";
+    ReadMode('cbreak');
+    my $key = Term::ReadKey::ReadKey(0);
+    ReadMode(0);
+    if ($key eq 'r') {
+        start_test();
+    } else {
+        menu();
+    }
+}
+
+
+# Function to calculate the average of a list of numbers
+sub average {
+    my $total = 0;
+    foreach my $number (@_) {
+        $total += $number;
+    }
+    return $total / scalar(@_);
+}
+
+# Function
+sub readChar {
+    ReadMode('cbreak');
+    my $key = Term::ReadKey::ReadKey(0);
+    ReadMode(0);
+    return $key;
+}
+
+sub update_layer {
+    my ($char, $prev) = @_;
+
+    print "\e[s"; # Save the current cursor position
+
+    my ($row, $col) = find_key_pos($prev);
+    if ($row < 0) {
+        # Character not found
+        return;
+    }
+
+    print "\e[${row};${col}H";
+    # Display the character in black
+    print "\e[30m$prev\e[0m";
+
+    # Move the cursor to the position of the character in the layout
+    ($row, $col) = find_key_pos($char);
+    print "\e[${row};${col}H";
+    # Display the character in bold green
+    print "\e[1;32m$char\e[0m";
+    
+
+    print "\e[u";# Move the cursor back to the saved position
+}
+
+sub find_key_pos {
+    # take to lower character
+    my $char = lc($_[0]);
+
+    my @lines = split /\n/, $layout;
+    my $row = 1;
+    my $col = 0;
+    
+
+    foreach my $line (@lines) {
+        $col = index($line, $char);
+        if ($col >= 0) {
+            last;
+        }
+        $row++;
+    }
+
+    if ($col < 0) {
+        # Character not found
+        return (undef, undef);
+    } else {
+        return ($row, $col+1); # Add 1 to column to account for 0-based indexing
+    }
+}
