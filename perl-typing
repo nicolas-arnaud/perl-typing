@@ -17,7 +17,7 @@ require "wordlists.pl";
 
 
 # Menu:
-my $layout_name = "qwerty";
+my $layout_name = "none";
 my $wordlist_file = "new";
 
 my @words;
@@ -79,7 +79,8 @@ sub start_test {
     my $correct_chars = 0;
 
     print "\e[2J\e[H";
-    print $layout;
+    print "\e[90m$layout\e[0m\n";
+
     print "\n***********************************************\n";
     print "Press 'esc' anytime to exit and 'tab' to restart.";
     print "\n***********************************************\n";    
@@ -98,7 +99,7 @@ sub start_test {
             # Display the character to type
             $char = substr($line, $i, 1);
             if (defined $layout) {
-                update_layer($char, $prev);
+                update_layer($layout, $char, $prev);
                 $prev = $char;
             }
 
@@ -112,7 +113,6 @@ sub start_test {
             $input .= $char_input;
 
             # Calculate the time taken to type the character
-
             if ($start_time eq 0) {
                 $start_time = time;
                 $prev_time = $start_time;
@@ -120,8 +120,6 @@ sub start_test {
             my $char_time = time - $prev_time;
             $prev_time = time;
 
-            #  Add the time to the total time if the character was typed correctly
-            #  Otherwise, add the time to the total time and add the character to the list of incorrect characters
             if (not exists $incorrect_chars{$char}) {
                 $incorrect_chars{$char} = 0;
             }
@@ -137,7 +135,7 @@ sub start_test {
                 # Add the character to the list of incorrect characters
                 $incorrect_chars{$char}++;
                 # Display the character in red
-                print "\e[31m$char\e[0m";
+                print "\e[31m$char_input\e[0m";
             }
 
             # Count the number of characters
@@ -197,52 +195,3 @@ sub readChar {
     return $key;
 }
 
-sub update_layer {
-    my ($char, $prev) = @_;
-
-    print "\e[s"; # Save the current cursor position
-
-    my ($row, $col) = find_key_pos($prev);
-    if ($row < 0) {
-        # Character not found
-        return;
-    }
-
-    print "\e[${row};${col}H";
-    # Display the character in black
-    print "\e[30m$prev\e[0m";
-
-    # Move the cursor to the position of the character in the layout
-    ($row, $col) = find_key_pos($char);
-    print "\e[${row};${col}H";
-    # Display the character in bold green
-    print "\e[1;32m$char\e[0m";
-    
-
-    print "\e[u";# Move the cursor back to the saved position
-}
-
-sub find_key_pos {
-    # take to lower character
-    my $char = lc($_[0]);
-
-    my @lines = split /\n/, $layout;
-    my $row = 1;
-    my $col = 0;
-    
-
-    foreach my $line (@lines) {
-        $col = index($line, $char);
-        if ($col >= 0) {
-            last;
-        }
-        $row++;
-    }
-
-    if ($col < 0) {
-        # Character not found
-        return (undef, undef);
-    } else {
-        return ($row, $col+1); # Add 1 to column to account for 0-based indexing
-    }
-}

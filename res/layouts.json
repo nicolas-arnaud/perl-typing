@@ -1,8 +1,61 @@
 {
-    "colemak-dhm": "qwfpb  jluy;\narstg  mneio'\nzxcdv  kh,./",
-    "qwerty": "qwert  yuiop\nasdfg  hjkl;\nzxcvb  nm,./",
-    "dvorak": "pyfgc  rluid\naoeht  ns\n;qjkxb  mw,vz",
-    "colemak": "qwfpg  jluy;\narstd  hneio'\nzxcvb  km,./",
-    "workman": "qdrwb  jfup;\nashtg  neio'\nzyxcv  km,./",
-    "norman": "qwfpg  jluy;\narstd  hneio'\nzxcvb  km,./"
+    "none": null,
+    "3 rows": {
+        "qwerty": [
+            "qwert    yuiop\nasdfg    hjkl;\nzxcvb    nm,./\n",
+            "QWERT    YUIOP\nASDFG    HJKL:\nZXCVB    NM<>?\n",
+            "`12345    67890-\n~!@#$%    ^&*()_\n|\\:;\"'  ,./?\n"
+        ],
+        "colemak": [
+            "qwfpg  jluy;\narstd  hneio'\nzxcvb  km,./\n",
+            "QWFPG  JLUY;\nARSTD  HNEIO\"\nZXCVB  KM<>?\n",
+            "`12345  67890-\n~!@#$%  ^&*()_\n|\\\"':  ,./?\n"
+        ],
+        "dvorak": [
+            "pyfgc  rluid\naoeht  ns\n;qjkxb  mw,vz\n",
+            "PYFGC  RLUID\nAOEHT  NS\n:QJKXB  MW<>?\n",
+            "`12345  67890=\n~!@#$%  ^&*()+\n|\\\"':  ,./?\n"
+        ],
+        "workman": [
+            "qdrwb  jfup;\nashtg  neio'\nzyxcv  km,./\n",
+            "QDRWB  JFUP;\nASHTG  NEIO\"\nZYXCV  KM<>?\n",
+            "`12345  67890-\n~!@#$%  ^&*()_\n|\\\"':  ,./?\n"
+        ],
+        "norman": [
+            "qwfpg  jluy;\narstd  hneio'\nzxcvb  km,./\n",
+            "QWFPG  JLUY;\nARSTD  HNEIO\"\nZXCVB  KM<>?\n",
+            "`12345  67890-\n~!@#$%  ^&*()_\n|\\\"':  ,./?\n"
+        ],
+        "colemak-dhm": [
+            "qwfpb    jluy;\narstg    mneio'\nzxcdv[  ]kh,./\n",
+            "QWFPB    JLUY;\nARSTG    MNEIO\"\nZXCDV{  }KH<>?\n",
+            "`12345    67890=\n~!@#$%    ^&*()+\n|\\:;-[{  }]_,./?\n"
+        ]
+    },
+    "4 rows": {
+        "qwerty": [
+            "`12345    67890-=\nqwerty    uiop[]\\\nasdfgh    jkl;'\nzxcvbn    m,./\n",
+            "~!@#$%    ^&*()_+\nQWERTY    UIOP{}|\nASDFGH    JKL:\"\nZXCVBN    M<>?\n"
+        ],
+        "colemak": [
+            "`12345    67890-=\nqwfpg    jluy;[]\\\narstd    hneio'\nzxcvb    km,./\n",
+            "~!@#$%    ^&*()_+\nQWFPG    JLUY{}|\nARSTD    HNEIO\"\nZXCVB    KM<>?\n"
+        ],
+        "dvorak": [
+            "`12345    67890-=\npyfgc    rluid[]\\\naoeht    ns'\n;qjkxb    mw,./\n",
+            "~!@#$%    ^&*()_+\nPYFGC    RLUID{}|\nAOEHT    NS\"\n:QJKXB    MW<>?\n"
+        ],
+        "workman": [
+            "`12345    67890-=\nqdrwb    jfup[]\\\nashtg    neio'\nzyxcv    km,./\n",
+            "~!@#$%    ^&*()_+\nQDRWB    JFUP{}|\nASHTG    NEIO\"\nZYXCV    KM<>?\n"
+        ],
+        "norman": [
+            "`12345    67890-=\nqwfpg    jluy;[]\\\narstd    hneio'\nzxcvb    km,./\n",
+            "~!@#$%    ^&*()_+\nQWFPG    JLUY{}|\nARSTD    HNEIO\"\nZXCVB    KM<>?\n"
+        ],
+        "colemak-dhm": [
+            "`12345    67890-=\nqwfpb    jluy;[]\\\narstg    mneio'\nzxcdv    kh,./\n",
+            "~!@#$%    ^&*()_+\nQWFPB    JLUY{}|\nARSTG    MNEIO\"\nZXCDV    KH<>?\n"
+        ]
+    }
 }
