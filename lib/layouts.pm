@@ -1,12 +1,13 @@
 use strict;
 use warnings;
 
+package layouts;
+
 use JSON;
 use List::Util qw( max );
 
-use lib 'lib';
 
-sub choose_layout {
+sub choose {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
     open my $layouts_file, "<", "res/layouts.json" or die "Can't open res/layouts.json: $!";
     my $layouts_json = do { local $/; <$layouts_file> };
@@ -18,7 +19,7 @@ sub choose_layout {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
     print "LAYOUT FAMILY SELECTION:\n\n";
 
-    my @layout_families = keys %{$layouts_data};
+    my @layout_families = sort keys %{$layouts_data};
     my $n = 1;
     foreach my $layout_family (@layout_families) {
         print "$n. $layout_family\n";
@@ -38,7 +39,7 @@ sub choose_layout {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
     print "LAYOUT SELECTION:\n";
 
-    my @layout_names = keys %{$layouts_data->{$layout_family}};
+    my @layout_names = sort keys %{$layouts_data->{$layout_family}};
     $n = 1;
     foreach my $layout_name (@layout_names) {
         print "$n. $layout_name\n";
@@ -52,7 +53,7 @@ sub choose_layout {
     return join "", $layout_family, "/", $layout_name;
 }
 
-sub get_layout {
+sub get {
     my $layout_info = $_[0];
     my ($layout_family, $layout_name) = split /\//, $layout_info;
     my $layout;
@@ -88,7 +89,7 @@ sub get_layout {
     return $layout;
 }
 
-sub update_layer {
+sub update {
     my ($layout, $char, $prev) = @_;
 
     print "\e[s"; # Save the current cursor position

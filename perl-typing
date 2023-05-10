@@ -11,64 +11,49 @@ use Term::ReadLine;
 use Time::HiRes qw( time );
 
 use lib 'lib';
-require "layouts.pl";
-require "wordlists.pl";
 
+use wordlists;
+use layouts;
 
-# Menu:
 my $layout_name = "none";
 my $wordlist_file = "new";
 
 my @words;
 my $layout;
 
-menu();
-# Menu:
-# - Start test
-#   run test with $layout and $text
-# - Select layout
-#   choose layout help to display from layouts.json keys and set $layout to the value
-#   default to none
-# - Select words list
-#   choose from lists folder and set $text to the value
-#   default to new (new list creation before start on it)
-# - Create words list
-#   Create randomized words list and set $wordlist to it
+main();
 
-sub menu {
-    print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "PERL-TYPING\n\n";
-    print "1. Start test\n";
-    print "2. Select layout ($layout_name)\n";
-    print "3. Select words list ($wordlist_file)\n";
-    print "4. Create words list\n";
-    print "5. Exit\n";
+sub main {
+    while (1) {
+        print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
+        print "PERL-TYPING\n\n";
+        print "1. Start test\n";
+        print "2. Select layout ($layout_name)\n";
+        print "3. Select words list ($wordlist_file)\n";
+        print "4. Create words list\n";
+        print "5. Exit\n";
 
-    ReadMode('cbreak');
-    my $key = Term::ReadKey::ReadKey(0);
-    ReadMode(0);
-    if ($key eq 1) {
-        $layout = get_layout($layout_name);
-        @words = get_word_list($wordlist_file);
-        start_test();
-    } elsif ($key eq 2) {
-        $layout_name = choose_layout();
-        menu();
-    } elsif ($key eq 3) {
-        $wordlist_file = choose_word_list();
-        menu();
-    } elsif ($key eq 4) {
-        random_creation();
-        menu();
-    } elsif ($key eq 5 or $key eq "\e") {
-        exit;
-    } else {
-        menu();
+        ReadMode('cbreak');
+        my $key = Term::ReadKey::ReadKey(0);
+        ReadMode(0);
+
+        if ($key eq 1) {
+            $layout = layouts::get($layout_name);
+            @words = wordlists::get($wordlist_file);
+            start();
+        } elsif ($key eq 2) {
+            $layout_name = layouts::choose();
+        } elsif ($key eq 3) {
+            $wordlist_file = wordlists::choose();
+        } elsif ($key eq 4) {
+            wordlists::random_creation();
+        } elsif ($key eq 5 or $key eq "\e") {
+            exit;
+        }
     }
 }
 
-sub start_test {
-
+sub start {
     my %char_times;
     my %incorrect_chars;
     my $start_time = 0;
@@ -87,10 +72,9 @@ sub start_test {
     print "*              Press 'esc' anytime to exit and 'tab' to restart.               *\n";
     print "*" x 80 . "\n";    
 
-    # Split the words into lines of 10 words
     my @lines;
-
     my $n = 0;
+
     for (my $i = 0; $i < scalar(@words); $i++) {
         if ($i % 10 eq 9) {
             $lines[$n] .= $words[$i];
@@ -100,52 +84,64 @@ sub start_test {
         }
     }
 
-    # Save cursor position
-    print "\e[s";
+    print "\e[s"; # Save cursor position
     foreach my $line (@lines) {
         print "$line\n";
-
     }
-    # Restore cursor position
-    print "\e[u";
+    print "\e[u"; # Restore cursor position
 
     my $char_input = '';
     my $prev_char = '';
 
-    foreach my $line (@lines) {
-        # Prompt the user to type the line
+    for (my $n = 0; $n < scalar(@lines); $n++) {
+        my $line = $lines[$n];
         my $input = '';
         my $char = '';
-        for (my $i = 0; $i < length($line); $i++) {
+
+        for (my $i = 0; $i <= length($line); $i++) {
             # Display the character to type
             $char = substr($line, $i, 1);
             if (defined $layout) {
-                update_layer($layout, $char, $prev_char);
+                layers::update($layout, $char, $prev_char);
             }
+
+            $char_input = readChar();
 
             if ($start_time eq 0) {
                 $start_time = time;
                 $prev_time = $start_time;
             }
 
-            # Calculate the time taken to type the character
-            $char_time = time - $prev_time;
-            $prev_time = time;
-
-            $char_input = readChar();
             if ($char_input eq "\e") {
-                menu();
+                main();
             } elsif ($char_input eq "\t") {
-                start_test();
+                start();
             } elsif ($char_input eq "^H" or $char_input eq "\x7f") {
-                $input = substr($input, 0, -1);
-                $i--;
-                print "\e[D";
-                print substr($line, $i, 1);
-                print "\e[D";
-                redo;
+                if ($i eq 0) {
+                    # move to last character of previous line
+                    $n--;
+                    $line = $lines[$n];
+                    $i = length($line);
+                    print "\e[1A\e[" . $i . "C";
+                    $i--;
+                } else {
+                    $input = substr($input, 0, -1);
+                    $i--;
+                    print "\e[D";
+                    print substr($line, $i, 1);
+                    print "\e[D";
+                    redo;
+                }
             } elsif ($char_input eq "\n") {
+                if ($i eq length($line)) {
+                    print " \e[1E\e[1G";
+                    next;
+                } else {
+                }
                 redo;
+            } elsif ($i eq length($line)) {
+                print "\e[31m█\e[0m\e[1E\e[1G";
+                next;
             }
 
             $input .= $char_input;
@@ -153,39 +149,25 @@ sub start_test {
             if (not exists $incorrect_chars{$char}) {
                 $incorrect_chars{$char} = 0;
             }
+
             if ($char eq $char_input) {
                 if (exists $char_times{$char}) {
                     push @{$char_times{$char}}, $char_time;
                 } else {
                     $char_times{$char} = [$char_time];
                 }
-                # Display the character in green
                 print "\e[32m$char\e[0m";
+                $correct_chars++;
             } else {
-                # Add the character to the list of incorrect characters
                 $incorrect_chars{$char}++;
-                # Display the character in red
                 print "\e[31m$char_input\e[0m";
             }
 
-            # Count the number of characters
             $total_chars++;
-
-            # Count the number of correct characters
-            if ($char eq $char_input) {
-                $correct_chars++;
-            }
+            $char_time = time - $prev_time;
+            $prev_time = time;
+            $prev_char = $char;
         }
-        # Wait for the user to press enter
-        my $key = readChar();
-        if ($key eq "\n") {
-            print "\e[1E\e[1G";
-        } else {
-            print "\e[31m█\e[0m\e[1E\e[1G";
-        }
-        $char_time = time - $prev_time;
-        $prev_time = time;
-        $prev_char = $char;
     }
     
     my $cpm = 60 * ($total_chars / (time - $start_time));
@@ -198,7 +180,6 @@ sub start_test {
     printf "Errors: %s\n", $total_chars - $correct_chars;
     printf "Accuracy: %.2f%%\n", 100 * ($correct_chars / $total_chars);
     print  "-" x 80 . "\n";
-    # Display the results
     $n = 0;
     foreach my $char (sort keys %char_times) {
         my $char_avg_time = sprintf("%.2f", average(@{$char_times{$char}}));
@@ -230,18 +211,17 @@ sub start_test {
         $n++;
     }
     print  "\n" . "-" x 80 . "\n";
-    # Restart or return to main menu
+
     print "Press 'tab' to restart or 'esc' to return to main menu.\n";
     while (1) {
         my $key = readChar();
 
         if ($key eq "\t") {
-            start_test();
-            return;
+            start();
         } elsif ($key eq "\e") {
-            menu();
-            return;
+            main();
         }
+        last;
     }
 }
 
