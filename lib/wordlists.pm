@@ -23,7 +23,7 @@ sub choose {
     ReadMode('normal');
     my $key = ReadLine(0);
     ReadMode(0);
-    if ($key !~ /^[0-9]+$/ || $key < 0 || $key > scalar(@lists) - 1) {
+    if ($key !~ /^[0-9]+$/ || $key < 0 || $key > scalar(@lists)) {
         $key = 0;
     }
     if ($key == 0) {
@@ -152,6 +152,7 @@ sub random_creation {
         print "Invalid input, setting to random\n";
         $file_name = "random";
     }
+    $file_name = "res/lists/$file_name.txt";
 
     # calculate the standard deviation of the distribution
     my $sigma = $avg_word_size / 3;
@@ -206,7 +207,7 @@ sub random_creation {
 
     print "$random_string\n";
     # write the string to the file word_lists/$file_name.txt
-    open(my $fh, '>', "res/lists/$file_name.txt") or die "Could not open file 'res/lists/$file_name.txt' $!";
+    open(my $fh, '>', $file_name) or die "Could not open file '$file_name' $!";
     print $fh $random_string;
     close $fh;
     return $file_name;

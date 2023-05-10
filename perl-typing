@@ -46,7 +46,7 @@ sub main {
         } elsif ($key eq 3) {
             $wordlist_file = wordlists::choose();
         } elsif ($key eq 4) {
-            wordlists::random_creation();
+            $wordlist_file = wordlists::random_creation();
         } elsif ($key eq 5 or $key eq "\e") {
             exit;
         }
