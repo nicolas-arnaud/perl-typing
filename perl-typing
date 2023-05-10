@@ -9,7 +9,6 @@ use warnings;
 use Term::ReadKey;
 use Term::ReadLine;
 use Time::HiRes qw( time );
-use Chart::Gnuplot;
 
 use lib 'lib';
 require "layouts.pl";
