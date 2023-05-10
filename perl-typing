@@ -72,6 +72,7 @@ sub start_test {
     my %char_times;
     my %incorrect_chars;
     my $start_time = 0;
+    my $char_time = 0;
     my $prev_time = $start_time;
     my $total_time = 0;
     my $total_chars = 0;
@@ -108,35 +109,46 @@ sub start_test {
     # Restore cursor position
     print "\e[u";
 
+    my $char_input = '';
+    my $prev_char = '';
+
     foreach my $line (@lines) {
         # Prompt the user to type the line
         my $input = '';
         my $char = '';
-        my $prev = '';
         for (my $i = 0; $i < length($line); $i++) {
             # Display the character to type
             $char = substr($line, $i, 1);
             if (defined $layout) {
-                update_layer($layout, $char, $prev);
-                $prev = $char;
+                update_layer($layout, $char, $prev_char);
             }
 
-            # Prompt the user to type the character
-            my $char_input = readChar();
-            if ($char_input eq "\e") {
-                menu();
-            } elsif ($char_input eq "\t") {
-                start_test();
-            }
-            $input .= $char_input;
-
-            # Calculate the time taken to type the character
             if ($start_time eq 0) {
                 $start_time = time;
                 $prev_time = $start_time;
             }
-            my $char_time = time - $prev_time;
+
+            # Calculate the time taken to type the character
+            $char_time = time - $prev_time;
             $prev_time = time;
+
+            $char_input = readChar();
+            if ($char_input eq "\e") {
+                menu();
+            } elsif ($char_input eq "\t") {
+                start_test();
+            } elsif ($char_input eq "^H" or $char_input eq "\x7f") {
+                $input = substr($input, 0, -1);
+                $i--;
+                print "\e[D";
+                print substr($line, $i, 1);
+                print "\e[D";
+                redo;
+            } elsif ($char_input eq "\n") {
+                redo;
+            }
+
+            $input .= $char_input;
 
             if (not exists $incorrect_chars{$char}) {
                 $incorrect_chars{$char} = 0;
@@ -171,6 +183,9 @@ sub start_test {
         } else {
             print "\e[31m█\e[0m\e[1E\e[1G";
         }
+        $char_time = time - $prev_time;
+        $prev_time = time;
+        $prev_char = $char;
     }
     
     my $cpm = 60 * ($total_chars / (time - $start_time));
@@ -217,18 +232,17 @@ sub start_test {
     print  "\n" . "-" x 80 . "\n";
     # Restart or return to main menu
     print "Press 'tab' to restart or 'esc' to return to main menu.\n";
-    my $key;
-    do {
-        ReadMode('cbreak');
-        $key = Term::ReadKey::ReadKey(0);
-        ReadMode(0);
+    while (1) {
+        my $key = readChar();
 
-        if ($key eq '\t') {
+        if ($key eq "\t") {
             start_test();
-        } elsif ($key eq '\e') {
+            return;
+        } elsif ($key eq "\e") {
             menu();
+            return;
         }
-    } while ($key ne '\t' and $key ne '\e');
+    }
 }
 
 
