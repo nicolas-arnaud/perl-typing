@@ -13,11 +13,12 @@ sub choose_layout {
     close $layouts_file;
 
     my $layouts_data = decode_json($layouts_json);
-    my @layout_families = keys %{$layouts_data};
 
     # Choose layout type which are the root keys of the json file (3rows, 4rows, etc.)
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
     print "LAYOUT FAMILY SELECTION:\n\n";
+
+    my @layout_families = keys %{$layouts_data};
     my $n = 1;
     foreach my $layout_family (@layout_families) {
         print "$n. $layout_family\n";
@@ -33,17 +34,17 @@ sub choose_layout {
         return "none";
     }
 
-    my @layout_names = keys %{$layouts_data->{$layout_family}};
 
-    # Display the layouts of the chosen type which are identified by the keys.
+    print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
+    print "LAYOUT SELECTION:\n";
+
+    my @layout_names = keys %{$layouts_data->{$layout_family}};
     $n = 1;
     foreach my $layout_name (@layout_names) {
         print "$n. $layout_name\n";
         $n++;
     }
 
-    print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "LAYOUT SELECTION:\n";
     $key = Term::ReadKey::ReadKey(0);
     ReadMode(0);
 
