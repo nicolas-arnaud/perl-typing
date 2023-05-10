@@ -17,6 +17,7 @@ sub choose {
         my $list = $lists[$i];
         $list =~ s/res\/lists\///;
         $list =~ s/\.txt//;
+        $lists[$i] = $list;
         print $i + 1 . ". $list\n";
     }
     # Read a number between 0 and the number of lists
@@ -36,7 +37,7 @@ sub get {
     my $wordlist_file = $_[0];
     my @words;
     if ($wordlist_file ne "new") {
-        open TEXT, "<", "$wordlist_file" or die "Can't open $wordlist_file: $!";
+        open TEXT, "<", "res/lists/$wordlist_file.txt" or die "Can't open $wordlist_file: $!";
     } else {
         print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
         print "Type-pl\n\n";
@@ -152,7 +153,6 @@ sub random_creation {
         print "Invalid input, setting to random\n";
         $file_name = "random";
     }
-    $file_name = "res/lists/$file_name.txt";
 
     # calculate the standard deviation of the distribution
     my $sigma = $avg_word_size / 3;
@@ -207,7 +207,7 @@ sub random_creation {
 
     print "$random_string\n";
     # write the string to the file word_lists/$file_name.txt
-    open(my $fh, '>', $file_name) or die "Could not open file '$file_name' $!";
+    open(my $fh, '>', "res/lists/$file_name.txt") or die "Could not open file 'res/lists/$file_name.txt' $!";
     print $fh $random_string;
     close $fh;
     return $file_name;
