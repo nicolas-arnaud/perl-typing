@@ -65,7 +65,7 @@ sub start {
 
     print "\e[2J\e[H";
     if ($layout_name ne "none") {
-        print "\e[90m$layout_name\e[0m\n";
+        print "\e[90m$layout\e[0m\n";
     }
 
     print "*" x 80 . "\n";
@@ -75,12 +75,18 @@ sub start {
     my @lines;
     my $n = 0;
 
+
+
     for (my $i = 0; $i < scalar(@words); $i++) {
-        if ($i % 10 eq 9) {
+        if ($i % 10 eq 9 or $i eq scalar(@words) - 1) {
             $lines[$n] .= $words[$i];
             $n++;
         } else {
             $lines[$n] .= $words[$i] . " ";
+            if (length($lines[$n]) + length($words[$i]) > 80) {
+                $lines[$n] =~ s/ $//;
+                $n++;
+            }
         }
     }
 
@@ -95,14 +101,12 @@ sub start {
 
     for (my $n = 0; $n < scalar(@lines); $n++) {
         my $line = $lines[$n];
-        my $input = '';
         my $char = '';
 
         for (my $i = 0; $i <= length($line); $i++) {
-            # Display the character to type
             $char = substr($line, $i, 1);
-            if (defined $layout) {
-                layers::update($layout, $char, $prev_char);
+            if ($layout_name ne "none") {
+                layouts::update($layout, $char, $prev_char);
             }
 
             $char_input = readChar();
@@ -118,14 +122,12 @@ sub start {
                 start();
             } elsif ($char_input eq "^H" or $char_input eq "\x7f") {
                 if ($i eq 0) {
-                    # move to last character of previous line
                     $n--;
                     $line = $lines[$n];
                     $i = length($line);
                     print "\e[1A\e[" . $i . "C";
                     $i--;
                 } else {
-                    $input = substr($input, 0, -1);
                     $i--;
                     print "\e[D";
                     print substr($line, $i, 1);
@@ -143,8 +145,6 @@ sub start {
                 print "\e[31m█\e[0m\e[1E\e[1G";
                 next;
             }
-
-            $input .= $char_input;
 
             if (not exists $incorrect_chars{$char}) {
                 $incorrect_chars{$char} = 0;

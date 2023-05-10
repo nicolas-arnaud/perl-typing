@@ -5,6 +5,7 @@ package layouts;
 
 use JSON;
 use List::Util qw( max );
+use Term::ReadKey;
 
 
 sub choose {

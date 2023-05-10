@@ -12,17 +12,24 @@ sub choose {
     print "Type-pl\n\n";
     print "Select word list\n";
     my @lists = glob("res/lists/*.txt");
+    print "0. New list\n";
     for (my $i = 0; $i < scalar(@lists); $i++) {
         my $list = $lists[$i];
         $list =~ s/res\/lists\///;
         $list =~ s/\.txt//;
-        print "$i. $list\n";
+        print $i + 1 . ". $list\n";
     }
     # Read a number between 0 and the number of lists
     ReadMode('normal');
     my $key = ReadLine(0);
     ReadMode(0);
-    return $lists[$key];
+    if ($key !~ /^[0-9]+$/ || $key < 0 || $key > scalar(@lists) - 1) {
+        $key = 0;
+    }
+    if ($key == 0) {
+        return "new";
+    }
+    return $lists[$key - 1];
 }
 
 sub get {

@@ -1,5 +1,6 @@
 # perl-typing
 A touch-typing trainger written with perl
+![](./perl-typing.gif)
 
 # Dependancies
 The modules used are:
