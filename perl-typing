@@ -78,7 +78,9 @@ sub start_test {
     my $correct_chars = 0;
 
     print "\e[2J\e[H";
-    print "\e[90m$layout\e[0m\n";
+    if ($layout_name ne "none") {
+        print "\e[90m$layout_name\e[0m\n";
+    }
 
     print "*" x 80 . "\n";
     print "*              Press 'esc' anytime to exit and 'tab' to restart.               *\n";
@@ -97,10 +99,16 @@ sub start_test {
         }
     }
 
+    # Save cursor position
+    print "\e[s";
     foreach my $line (@lines) {
-        # Display the line to type
-        print "\n$line\n";
+        print "$line\n";
 
+    }
+    # Restore cursor position
+    print "\e[u";
+
+    foreach my $line (@lines) {
         # Prompt the user to type the line
         my $input = '';
         my $char = '';
@@ -156,6 +164,13 @@ sub start_test {
                 $correct_chars++;
             }
         }
+        # Wait for the user to press enter
+        my $key = readChar();
+        if ($key eq "\n") {
+            print "\e[1E\e[1G";
+        } else {
+            print "\e[31m█\e[0m\e[1E\e[1G";
+        }
     }
     
     my $cpm = 60 * ($total_chars / (time - $start_time));
@@ -165,9 +180,8 @@ sub start_test {
     printf "Speed: %.2f CPM\n", $cpm;
     printf "Speed: %.2f WPM\n", 60 * (scalar(@words) / (time - $start_time));
     print  "-" x 80 . "\n";
-    printf "Errors: %s\n", scalar(keys %incorrect_chars);
+    printf "Errors: %s\n", $total_chars - $correct_chars;
     printf "Accuracy: %.2f%%\n", 100 * ($correct_chars / $total_chars);
-    printf "Error rate: %.2f%%\n", 100 * (scalar(keys %incorrect_chars) / $total_chars);
     print  "-" x 80 . "\n";
     # Display the results
     $n = 0;
@@ -202,15 +216,19 @@ sub start_test {
     }
     print  "\n" . "-" x 80 . "\n";
     # Restart or return to main menu
-    print "Press 'r' to restart or 'q' to return to main menu.\n";
-    ReadMode('cbreak');
-    my $key = Term::ReadKey::ReadKey(0);
-    ReadMode(0);
-    if ($key eq 'r') {
-        start_test();
-    } elsif ($key eq "\e") {
-        menu();
-    }
+    print "Press 'tab' to restart or 'esc' to return to main menu.\n";
+    my $key;
+    do {
+        ReadMode('cbreak');
+        $key = Term::ReadKey::ReadKey(0);
+        ReadMode(0);
+
+        if ($key eq '\t') {
+            start_test();
+        } elsif ($key eq '\e') {
+            menu();
+        }
+    } while ($key ne '\t' and $key ne '\e');
 }
 
 

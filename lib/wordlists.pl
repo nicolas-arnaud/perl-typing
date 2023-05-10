@@ -48,10 +48,9 @@ sub get_word_list {
     }
     @words = <TEXT>;
     close TEXT;
-    foreach my $word (@words) {
-        $word =~ s/\s//g;
-        $word =~ s/\W//g;
-    }
+    chomp @words;
+    @words = grep { $_ ne '' } @words;
+
     return @words;
 }
 
