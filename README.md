@@ -1,8 +1,20 @@
-# perl-typing
-A touch-typing trainger written with perl
+# Typerl
+A touch-typing trainer written with perl
 ![](./imgs/typing.gif)
 
-# Dependancies
+# Random texts
+![](./imgs/random.gif)
+
+# Results:
+![](./imgs/results.png)
+
+# Layouts
+You can set a keyboard layout to help you discover layouts and layers.
+Layouts are defined in `res/layouts.json`.
+If you add commonly used layouts, you're welcome to pull a request.
+![](./imgs/layer.gif)
+
+# Dependencies
 The modules used are:
 - Term::ReadKey
 - Term::ReadLine
@@ -10,13 +22,3 @@ The modules used are:
 - Time::HiRes;
 - JSON
 - List::Util
-
-# Wordlists
-![](./imgs/random.gif)
-
-
-# Layouts
-You can set a keyboard layout to help you discover layouts and layers.
-Layouts are defined in `res/layouts.json`.
-If you add commonly used layouts, you're welcome to pull a request.
-![](./imgs/layer.gif)

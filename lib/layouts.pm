@@ -94,7 +94,8 @@ sub get {
 }
 
 sub update {
-    my ($layout, $char, $prev) = @_;
+    my ($layout, $prev, $char, $color) = @_;
+    # if layout is empty, do nothing
 
     print "\e[s"; # Save the current cursor position
 
@@ -112,7 +113,7 @@ sub update {
     ($row, $col) = find_key_pos($char, $layout);
     print "\e[${row};${col}H";
     # Display the character in bold green
-    print "\e[1;32m$char\e[0m";
+    print "$color$char\e[0m";
 
     print "\e[u";# Move the cursor back to the saved position
 }

@@ -277,15 +277,14 @@ sub readChar {
 sub get_color {
     my ($avg_cpm, $min_cpm, $max_cpm, $key_cpm, $key_acc) = @_;
 
-    my $cpm_ratio = ($key_cpm - $min_cpm) / ($max_cpm - $min_cpm);
-    my $green_percent = int($cpm_ratio * $key_acc);
-    my $red_percent = int((1 - $cpm_ratio) * 100);
     # Calculate the color value based on the given parameters
+    my $cpm_ratio = $key_cpm / $avg_cpm;
+    my $green_percent = ($cpm_ratio >= 1) ? 100 : int($cpm_ratio * 100 * $key_acc);
+    my $red_percent = ($cpm_ratio < 1) ? 100 : int((2 - $cpm_ratio) * 100);
 
     # Ensure the color values are within the valid range of 0-255
     $red_percent = ($red_percent < 0) ? 0 : ($red_percent > 100) ? 255 : int($red_percent * 2.55);
     $green_percent = ($green_percent < 0) ? 0 : ($green_percent > 100) ? 255 : int($green_percent * 2.55);
-    #my $red_percent = 255 - int($green_percent / 2);
 
     # Return the color value
     return "\x1b[38;2;${red_percent};${green_percent};0m";
