@@ -8,9 +8,11 @@ use warnings;
 
 use Term::ReadKey;
 use Term::ReadLine;
-use Time::HiRes qw( time );
 
-use lib 'lib';
+use Time::HiRes qw( time );
+use FindBin qw($RealBin);
+
+use lib "$RealBin/lib";
 
 use wordlists;
 use layouts;
@@ -26,7 +28,7 @@ main();
 
 sub main {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "# PERL-TYPING\n\n";
+    print "# TYPERL\n\n";
     print " Start test\n";
     print " Select layout ($layout_name)\n";
     print " Select words list ($wordlist_file)\n";

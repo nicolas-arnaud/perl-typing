@@ -9,14 +9,17 @@ use Term::ReadLine::Gnu;
 
 use menu;
 
+use FindBin qw($RealBin);
+my $res = "$RealBin/res";
+
 sub choose {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
     print "# Select word list:\n\n";
-    my @lists = glob("res/lists/*.txt");
+    my @lists = glob("$res/lists/*.txt");
     print " New list\n";
     for (my $i = 0; $i < scalar(@lists); $i++) {
         my $list = $lists[$i];
-        $list =~ s/res\/lists\///;
+        $list =~ s/$res\/lists\///;
         $list =~ s/\.txt//;
         $lists[$i] = $list;
         print " $list\n";
@@ -35,7 +38,7 @@ sub get {
     my $wordlist_file = $_[0];
     my @words;
     if ($wordlist_file ne "new") {
-        open TEXT, "<", "res/lists/$wordlist_file.txt" or die "Can't open $wordlist_file: $!";
+        open TEXT, "<", "$res/lists/$wordlist_file.txt" or die "Can't open $wordlist_file: $!";
     } else {
         print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
         print "# Select word list type:\n\n";
@@ -49,7 +52,7 @@ sub get {
         } else {
             $wordlist_file = random_creation();
         }
-        open TEXT, "<", "res/lists/$wordlist_file.txt" or die "Can't open res/lists/$wordlist_file.txt: $!";
+        open TEXT, "<", "$res/lists/$wordlist_file.txt" or die "Can't open res/lists/$wordlist_file.txt: $!";
     }
     @words = <TEXT>;
     close TEXT;
@@ -93,7 +96,7 @@ sub words_creation {
         $words_amount = 50;
     }
 
-    open(my $fh, '<', "res/1000-most-common-words.txt") or die "Could not open file 'res/1000-most-common-words.txt' $!";
+    open(my $fh, '<', "$res/1000-most-common-words.txt") or die "Could not open file 'res/1000-most-common-words.txt' $!";
     my @words = <$fh>;
     close $fh;
 
@@ -104,7 +107,7 @@ sub words_creation {
         $word =~ s/\s//g;
         $wordlist .= $word . "\n";
     }
-    open($fh, '>', "res/lists/tmp.txt") or die "Could not open file 'res/lists/new.txt' $!";
+    open($fh, '>', "$res/lists/tmp.txt") or die "Could not open file 'res/lists/new.txt' $!";
     print $fh $wordlist;
     close $fh;
     return "tmp";
@@ -208,7 +211,7 @@ sub random_creation {
 
     print "$random_string\n";
     # write the string to the file word_lists/$file_name.txt
-    open(my $fh, '>', "res/lists/$file_name.txt") or die "Could not open file 'res/lists/$file_name.txt' $!";
+    open(my $fh, '>', "$res/lists/$file_name.txt") or die "Could not open file 'res/lists/$file_name.txt' $!";
     print $fh $random_string;
     close $fh;
     return $file_name;

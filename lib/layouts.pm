@@ -8,10 +8,13 @@ use List::Util qw( max );
 use Term::ReadKey;
 use menu;
 
+use FindBin qw($RealBin);
+my $res = "$RealBin/res";
+
 
 sub choose {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    open my $layouts_file, "<", "res/layouts.json" or die "Can't open res/layouts.json: $!";
+    open my $layouts_file, "<", "$res/layouts.json" or die "Can't open res/layouts.json: $!";
     my $layouts_json = do { local $/; <$layouts_file> };
     close $layouts_file;
 
@@ -60,7 +63,7 @@ sub get {
     my $layout;
 
     if ($layout_name ne "none") {
-        open my $layouts_file, "<", "res/layouts.json" or die "Can't open res/layouts.json: $!";
+        open my $layouts_file, "<", "$res/layouts.json" or die "Can't open res/layouts.json: $!";
         my $layouts_json = do { local $/; <$layouts_file> };
         close $layouts_file;
 
