@@ -9,28 +9,39 @@ use Term::ReadLine::Gnu;
 
 sub choose {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "Type-pl\n\n";
-    print "Select word list\n";
+    print "Select word list:\n\n";
     my @lists = glob("res/lists/*.txt");
-    print "0. New list\n";
+    print " New list\n";
     for (my $i = 0; $i < scalar(@lists); $i++) {
         my $list = $lists[$i];
         $list =~ s/res\/lists\///;
         $list =~ s/\.txt//;
         $lists[$i] = $list;
-        print $i + 1 . ". $list\n";
+        print " $list\n";
     }
-    # Read a number between 0 and the number of lists
-    ReadMode('normal');
-    my $key = ReadLine(0);
-    ReadMode(0);
-    if ($key !~ /^[0-9]+$/ || $key < 0 || $key > scalar(@lists)) {
-        $key = 0;
+
+    print "\e[3;0H>";
+    my $i = 0;
+    my $key;
+
+    while (1) {
+        ReadMode('cbreak');
+        $key = Term::ReadKey::ReadKey(0);
+        ReadMode(0);
+     
+        if ($key eq "k" and $i > 0) {
+            print "\e[2D \e[D\e[A>";
+            $i--;
+        } elsif ($key eq "j" and $i < scalar(@lists)) {
+            print "\e[2D \e[D\e[B>";
+            $i++;
+        } elsif ($key eq "\n") {
+            if ($i eq 0) {
+                return "new";
+            }
+            return $lists[$i - 1];
+        }
     }
-    if ($key == 0) {
-        return "new";
-    }
-    return $lists[$key - 1];
 }
 
 sub get {
@@ -73,10 +84,16 @@ my $enclosures = [
     "(", ")",
     "|", "|",
     "/", "/",
+    "\"", "\"",
     "www.", ".com",
     "http://", ".com",
     "for(", ")",
-    "/*", "*/"
+    "/*", "*/",
+    "", "[5]",
+    "*", "",
+    "\$", ";",
+    "if(", "){}",
+         
 ];
 
 # choose random words from "./1000-most-common-words.txt"
@@ -87,7 +104,6 @@ sub words_creation {
     print "Enter number of words (50):\n";
     my $words_amount = $term->readline('> ');
     chomp $words_amount;
-    # if amount is not a number or less than 1, set it to 50
     if ($words_amount !~ /^[0-9]+$/ || $words_amount < 1) {
         $words_amount = 50;
     }
@@ -226,6 +242,6 @@ sub enclose {
 }
 
 sub random_space {
-    my $spaces = ["->", "=>", "."];
+    my $spaces = ["->", "=>", ".", "::"];
     return $spaces->[int(rand(scalar(@$spaces)))];
 }

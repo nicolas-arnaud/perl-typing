@@ -23,14 +23,29 @@ sub choose {
     my @layout_families = sort keys %{$layouts_data};
     my $n = 1;
     foreach my $layout_family (@layout_families) {
-        print "$n. $layout_family\n";
+        print " $layout_family\n";
         $n++;
     }
 
+    my $i = 0;
+    print "\e[3;0H>";
     ReadMode('cbreak');
-    my $key = Term::ReadKey::ReadKey(0);
 
-    my $layout_family = $layout_families[scalar $key-1];
+    while (1) {
+        my $key = Term::ReadKey::ReadKey(0);
+
+        if ($key eq "k" and $i > 0) {
+            print "\e[2D \e[D\e[A>";
+            $i--;
+        } elsif ($key eq "j" and $i < 2) {
+            print "\e[2D \e[D\e[B>";
+            $i++;
+        } elsif ($key eq "\n") {
+            last;
+        }
+    }
+
+    my $layout_family = $layout_families[scalar $i];
 
     if ($layout_family eq "none") {
         return "none";
@@ -38,19 +53,34 @@ sub choose {
 
 
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "LAYOUT SELECTION:\n";
+    print "LAYOUT SELECTION:\n\n";
 
     my @layout_names = sort keys %{$layouts_data->{$layout_family}};
     $n = 1;
     foreach my $layout_name (@layout_names) {
-        print "$n. $layout_name\n";
+        print " $layout_name\n";
         $n++;
     }
 
-    $key = Term::ReadKey::ReadKey(0);
+    print "\e[3;0H>";
+    $i = 0;
+
+    while (1) {
+        my $key = Term::ReadKey::ReadKey(0);
+
+        if ($key eq "k" and $i > 0) {
+            print "\e[2D \e[D\e[A>";
+            $i--;
+        } elsif ($key eq "j" and $i < scalar @layout_names-1) {
+            print "\e[2D \e[D\e[B>";
+            $i++;
+        } elsif ($key eq "\n") {
+            last;
+        }
+    }
     ReadMode(0);
 
-    my $layout_name = $layout_names[scalar $key-1];
+    my $layout_name = $layout_names[scalar $i];
     return join "", $layout_family, "/", $layout_name;
 }
 
