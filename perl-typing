@@ -14,6 +14,7 @@ use lib 'lib';
 
 use wordlists;
 use layouts;
+use menu;
 
 my $layout_name = "none";
 my $wordlist_file = "new";
@@ -25,46 +26,30 @@ main();
 
 sub main {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "PERL-TYPING\n\n";
-    print " 1. Start test\n";
-    print " 2. Select layout ($layout_name)\n";
-    print " 3. Select words list ($wordlist_file)\n";
-    print " 4. Create words list\n";
-    print " 5. Exit\n";
+    print "# PERL-TYPING\n\n";
+    print " Start test\n";
+    print " Select layout ($layout_name)\n";
+    print " Select words list ($wordlist_file)\n";
+    print " Create words list\n";
+    print " Exit\n";
+
     print "\e[3;0H>";
-
-    my $i = 1;
-    while (1) {
-        ReadMode('cbreak');
-        my $key = Term::ReadKey::ReadKey(0);
-        ReadMode(0);
-
-        if ($key eq "k" and $i > 1) {
-            print "\e[2D \e[D\e[A>";
-            $i--;
-        } elsif ($key eq "j" and $i < 5) {
-            print "\e[2D \e[D\e[B>";
-            $i++;
-        } elsif ($key eq "\n") {
-            $key = $i;
-        }
-        
-        if ($key eq 1) {
-            $layout = layouts::get($layout_name);
-            @words = wordlists::get($wordlist_file);
-            start();
-        } elsif ($key eq 2) {
-            $layout_name = layouts::choose();
-            main();
-        } elsif ($key eq 3) {
-            $wordlist_file = wordlists::choose();
-            main();
-        } elsif ($key eq 4) {
-            $wordlist_file = wordlists::random_creation();
-            main();
-        } elsif ($key eq 5 or $key eq "q" or $key eq "\e") {
-            exit;
-        }
+    my $key = menu::menu(0, 4);
+    if ($key eq 0) {
+        $layout = layouts::get($layout_name);
+        @words = wordlists::get($wordlist_file);
+        start();
+    } elsif ($key eq 1) {
+        $layout_name = layouts::choose();
+        main();
+    } elsif ($key eq 2) {
+        $wordlist_file = wordlists::choose();
+        main();
+    } elsif ($key eq 3) {
+        $wordlist_file = wordlists::random_creation();
+        main();
+    } elsif ($key eq 4 or $key eq "q" or $key eq "\e") {
+        exit;
     }
 }
 

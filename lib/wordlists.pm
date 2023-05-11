@@ -7,9 +7,11 @@ use Term::ReadKey;
 use Term::ReadLine;
 use Term::ReadLine::Gnu;
 
+use menu;
+
 sub choose {
     print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-    print "Select word list:\n\n";
+    print "# Select word list:\n\n";
     my @lists = glob("res/lists/*.txt");
     print " New list\n";
     for (my $i = 0; $i < scalar(@lists); $i++) {
@@ -21,27 +23,12 @@ sub choose {
     }
 
     print "\e[3;0H>";
-    my $i = 0;
-    my $key;
 
-    while (1) {
-        ReadMode('cbreak');
-        $key = Term::ReadKey::ReadKey(0);
-        ReadMode(0);
-     
-        if ($key eq "k" and $i > 0) {
-            print "\e[2D \e[D\e[A>";
-            $i--;
-        } elsif ($key eq "j" and $i < scalar(@lists)) {
-            print "\e[2D \e[D\e[B>";
-            $i++;
-        } elsif ($key eq "\n") {
-            if ($i eq 0) {
-                return "new";
-            }
-            return $lists[$i - 1];
-        }
+    my $i = menu::menu(0, scalar(@lists));
+    if ($i eq 0) {
+        return "new";
     }
+    return $lists[$i - 1];
 }
 
 sub get {
@@ -51,14 +38,13 @@ sub get {
         open TEXT, "<", "res/lists/$wordlist_file.txt" or die "Can't open $wordlist_file: $!";
     } else {
         print "\e[2J\e[H"; # Clear screen and move cursor to top-left corner
-        print "Type-pl\n\n";
-        print "Select word list type:\n";
-        print "1. Common words\n";
-        print "2. Randomized\n";
-        ReadMode('cbreak');
-        my $key = Term::ReadKey::ReadKey(0);
-        ReadMode(0);
-        if ($key eq 1) {
+        print "# Select word list type:\n\n";
+        print " Common words\n";
+        print " Randomized\n";
+        print "\e[3;0H>";
+        my $i = menu::menu(0, 1);
+
+        if ($i eq 0) {
             $wordlist_file = words_creation();
         } else {
             $wordlist_file = random_creation();
