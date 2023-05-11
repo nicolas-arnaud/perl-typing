@@ -62,6 +62,7 @@ sub start {
     my $total_time = 0;
     my $total_chars = 0;
     my $correct_chars = 0;
+    my $fixed_chars = 0;
 
     print "\e[2J\e[H";
     if ($layout_name ne "none") {
@@ -121,6 +122,7 @@ sub start {
             } elsif ($char_input eq "\t") {
                 start();
             } elsif ($char_input eq "^H" or $char_input eq "\x7f") {
+                $fixed_chars++;
                 if ($i eq 0) {
                     $n--;
                     $line = $lines[$n];
@@ -156,11 +158,19 @@ sub start {
                 } else {
                     $char_times{$char} = [$char_time];
                 }
-                print "\e[32m$char\e[0m";
+                if ($fixed_chars eq 0) {
+                    print "\e[92m$char\e[0m";
+                } else {
+                    print "\e[93m$char\e[0m";
+                    $fixed_chars--;
+                }
                 $correct_chars++;
             } else {
+                if ($fixed_chars lt 0) {
+                    $fixed_chars--;
+                }
                 $incorrect_chars{$char}++;
-                print "\e[31m$char_input\e[0m";
+                print "\e[91m$char_input\e[0m";
             }
 
             $total_chars++;

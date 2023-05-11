@@ -78,8 +78,7 @@ my $enclosures = [
     "", "[5]",
     "*", "",
     "\$", ";",
-    "if(", "){}",
-         
+    "if(", "){}"
 ];
 
 # choose random words from "./1000-most-common-words.txt"
