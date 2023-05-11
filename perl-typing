@@ -139,8 +139,10 @@ sub start {
             } elsif ($char_input eq "\n") {
                 if ($i eq length($line)) {
                     print " \e[1E\e[1G";
+                    if ($fixed_chars gt 0) {
+                        $fixed_chars--;
+                    }
                     next;
-                } else {
                 }
                 redo;
             } elsif ($i eq length($line)) {
@@ -166,7 +168,7 @@ sub start {
                 }
                 $correct_chars++;
             } else {
-                if ($fixed_chars lt 0) {
+                if ($fixed_chars gt 0) {
                     $fixed_chars--;
                 }
                 $incorrect_chars{$char}++;
@@ -210,7 +212,7 @@ sub start {
             print "\e[91m";
         }
 
-        printf "%s: %.3s CPM (%s%%)", $char, $char_cpm, $char_accuracy;
+        printf "%s: %d CPM (%s%%)", $char, $char_cpm, $char_accuracy;
         print "\e[0m";
 
         if ($n % 3 == 0) {
