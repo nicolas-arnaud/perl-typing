@@ -31,7 +31,7 @@ sub choose {
         $n++;
     }
 
-    print "\e[3;0H>";
+    print "\e[3;0H➡️";
     my $i = menu::menu(0, scalar @layout_families-1);
 
     my $layout_family = $layout_families[scalar $i];
@@ -50,7 +50,7 @@ sub choose {
         $n++;
     }
 
-    print "\e[3;0H>";
+    print "\e[3;0H➡️";
     $i = menu::menu(0, scalar @layout_names-1);
     my $layout_name = $layout_names[scalar $i];
 

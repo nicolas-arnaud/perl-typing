@@ -11,10 +11,10 @@ sub menu {
     while (1) {
         my $key = Term::ReadKey::ReadKey(0);
         if ($key eq "k" and $i > $min) {
-            print "\e[2D \e[D\e[A>";
+            print "\e[2D \e[D\e[A➡️";
             $i--;
         } elsif ($key eq "j" and $i < $max) {
-            print "\e[2D \e[D\e[B>";
+            print "\e[2D \e[D\e[B➡️";
             $i++;
         } elsif ($key eq "\n") {
             last;

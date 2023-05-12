@@ -12,15 +12,18 @@ use List::Util qw( min max sum );
 
 use Time::HiRes qw( time );
 use FindBin qw($RealBin);
+use threads;
 
 use lib "$RealBin/lib";
 
 use wordlists;
 use layouts;
 use menu;
+use metronome;
 
 my $layout_name = "none";
 my $wordlist_file = "new";
+my $bpm = 0;
 
 my @words;
 my $layout = "";
@@ -34,10 +37,11 @@ sub main {
     print " Select layout ($layout_name)\n";
     print " Select words list ($wordlist_file)\n";
     print " Create words list\n";
+    print " Set metronome ($bpm)\n";
     print " Exit\n";
 
-    print "\e[3;0H>";
-    my $key = menu::menu(0, 4);
+    print "\e[3;0H➡️";
+    my $key = menu::menu(0, 5);
     if ($key eq 0) {
         $layout = layouts::get($layout_name);
         @words = wordlists::get($wordlist_file);
@@ -51,7 +55,10 @@ sub main {
     } elsif ($key eq 3) {
         $wordlist_file = wordlists::random_creation();
         main();
-    } elsif ($key eq 4 or $key eq "q" or $key eq "\e") {
+    } elsif ($key eq 4) {
+        $bpm = metronome::set();
+        main();
+    } elsif ($key eq 5 or $key eq "q" or $key eq "\e") {
         exit;
     }
 }
@@ -67,6 +74,9 @@ sub start {
     my $correct_chars = 0;
     my $fixed_chars = 0;
 
+
+    my $metronome_pid = metronome::start($bpm, $RealBin);
+
     print "\e[2J\e[H";
     if ($layout_name ne "none") {
         print "\e[90m$layout\e[0m\n";
@@ -78,8 +88,6 @@ sub start {
 
     my @lines;
     my $n = 0;
-
-
 
     for (my $i = 0; $i < scalar(@words); $i++) {
         if ($i % 10 eq 9 or $i eq scalar(@words) - 1) {
@@ -121,8 +129,10 @@ sub start {
             }
 
             if ($char_input eq "\e") {
+                metronome::stop($metronome_pid);
                 main();
             } elsif ($char_input eq "\t") {
+                metronome::stop($metronome_pid);
                 start();
             } elsif ($char_input eq "^H" or $char_input eq "\x7f") {
                 $fixed_chars++;
@@ -154,6 +164,9 @@ sub start {
                     push @{$char_times{$char}}, $char_time;
                 } else {
                     $char_times{$char} = [$char_time];
+                }
+                if ($char eq "\n") {
+                    $char = "↩️\n";
                 }
                 if ($fixed_chars eq 0) {
                     print "\e[92m$char\e[0m";
@@ -213,6 +226,9 @@ sub start {
         $n++;
 
     }
+
+    metronome::stop($metronome_pid);
+
     foreach my $char (sort keys %char_times) {
         my $correct = scalar(@{$char_times{$char}});
         my $total = $correct + $incorrect_chars{$char};
@@ -229,6 +245,11 @@ sub start {
             layouts::update($layout, $char, $char, $color);
         }
 
+        if ($char eq "\n") {
+            $char = "↩️";
+        } elsif ($char eq " ") {
+            $char = "␣";
+        }
 
         printf "%s: %d CPM (%d/%d : %s%%)", $char, $char_cpm, $correct, $total, $char_accuracy;
         print "\e[0m";

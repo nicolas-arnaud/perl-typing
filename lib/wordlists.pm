@@ -25,7 +25,7 @@ sub choose {
         print " $list\n";
     }
 
-    print "\e[3;0H>";
+    print "\e[3;0H➡️";
 
     my $i = menu::menu(0, scalar(@lists));
     if ($i eq 0) {
@@ -44,7 +44,7 @@ sub get {
         print "# Select word list type:\n\n";
         print " Common words\n";
         print " Randomized\n";
-        print "\e[3;0H>";
+        print "\e[3;0H➡️";
         my $i = menu::menu(0, 1);
 
         if ($i eq 0) {
