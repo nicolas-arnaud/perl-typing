@@ -101,7 +101,6 @@ sub update {
 
     my ($row, $col) = find_key_pos($prev, $layout);
     if ($row < 0) {
-        # Character not found
         return;
     }
 
@@ -138,7 +137,7 @@ sub find_key_pos {
 
     if ($col < 0) {
         # Character not found
-        return (undef, undef);
+        return (-1, -1);
     } else {
         return ($row, $col+1); # Add 1 to column to account for 0-based indexing
     }

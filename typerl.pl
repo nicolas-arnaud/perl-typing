@@ -8,6 +8,7 @@ use warnings;
 
 use Term::ReadKey;
 use Term::ReadLine;
+use List::Util qw( min max sum );
 
 use Time::HiRes qw( time );
 use FindBin qw($RealBin);
@@ -73,7 +74,7 @@ sub start {
 
     print "*" x 80 . "\n";
     print "*              Press 'esc' anytime to exit and 'tab' to restart.               *\n";
-    print "*" x 80 . "\n";    
+    print "*" x 80 . "\n";
 
     my @lines;
     my $n = 0;
@@ -82,12 +83,12 @@ sub start {
 
     for (my $i = 0; $i < scalar(@words); $i++) {
         if ($i % 10 eq 9 or $i eq scalar(@words) - 1) {
-            $lines[$n] .= $words[$i];
+            $lines[$n] .= $words[$i] . "\n";
             $n++;
         } else {
             $lines[$n] .= $words[$i] . " ";
             if (length($lines[$n]) + length($words[$i]) > 80) {
-                $lines[$n] =~ s/ $//;
+                $lines[$n] =~ s/ $/\\n/;
                 $n++;
             }
         }
@@ -95,7 +96,7 @@ sub start {
 
     print "\e[s"; # Save cursor position
     foreach my $line (@lines) {
-        print "$line\n";
+        print "$line";
     }
     print "\e[u"; # Restore cursor position
 
@@ -106,7 +107,7 @@ sub start {
         my $line = $lines[$n];
         my $char = '';
 
-        for (my $i = 0; $i <= length($line); $i++) {
+        for (my $i = 0; $i < length($line); $i++) {
             $char = substr($line, $i, 1);
             if ($layout_name ne "none") {
                 layouts::update($layout, $prev_char, $char, "\e[1;32m");
@@ -126,30 +127,22 @@ sub start {
             } elsif ($char_input eq "^H" or $char_input eq "\x7f") {
                 $fixed_chars++;
                 if ($i eq 0) {
+                    if ($n eq 0) {
+                        redo;
+                    }
                     $n--;
                     $line = $lines[$n];
-                    $i = length($line);
+                    $i = length($line) - 1;
                     print "\e[1A\e[" . $i . "C";
-                    $i--;
                 } else {
                     $i--;
                     print "\e[D";
                     print substr($line, $i, 1);
                     print "\e[D";
-                    redo;
-                }
-            } elsif ($char_input eq "\n") {
-                if ($i eq length($line)) {
-                    print " \e[1E\e[1G";
-                    if ($fixed_chars gt 0) {
-                        $fixed_chars--;
-                    }
-                    next;
                 }
                 redo;
-            } elsif ($i eq length($line)) {
-                print "\e[31m█\e[0m\e[1E\e[1G";
-                next;
+            } elsif ($char_input eq "\n" and $char ne "\n") {
+                redo;
             }
 
             if (not exists $incorrect_chars{$char}) {
@@ -173,8 +166,15 @@ sub start {
                 if ($fixed_chars gt 0) {
                     $fixed_chars--;
                 }
+                if ($char_input eq " ") {
+                    print "\e[31m█\e[0m";
+                } else {
+                    print "\e[91m$char_input\e[0m";
+                }
+                if ($char eq "\n") {
+                    print " \e[1E\e[1G";
+                }
                 $incorrect_chars{$char}++;
-                print "\e[91m$char_input\e[0m";
             }
 
             $total_chars++;
@@ -277,14 +277,23 @@ sub readChar {
 sub get_color {
     my ($avg_cpm, $min_cpm, $max_cpm, $key_cpm, $key_acc) = @_;
 
-    my $cpm_ratio = ($key_cpm - $min_cpm) / ($max_cpm - $min_cpm);
-    my $green_percent = int($cpm_ratio * $key_acc);
-    my $red_percent = int((1 - $cpm_ratio) * 100);
+    $max_cpm = min($max_cpm, $avg_cpm * 2);
+
+    # max > avg > min : green > yellow > red
+    # green : 255, 255, 0
+    # red : 0, 255, 255
+
+    my $green = min(($key_cpm - $min_cpm) / ($avg_cpm - $min_cpm), 1);
+    my $red = 1 - max(($key_cpm - $avg_cpm) / ($max_cpm - $avg_cpm), 0);
+    my $green_percent = int($green * (max($key_acc, 90) - 90) * 10);
+    my $red_percent = int($red * $key_acc);
+    #my $red_percent = int((1 - $cpm_ratio) * 100 );
     # Calculate the color value based on the given parameters
 
     # Ensure the color values are within the valid range of 0-255
-    $red_percent = ($red_percent < 0) ? 0 : ($red_percent > 100) ? 255 : int($red_percent * 2.55);
     $green_percent = ($green_percent < 0) ? 0 : ($green_percent > 100) ? 255 : int($green_percent * 2.55);
+    $red_percent = ($red_percent < 0) ? 0 : ($red_percent > 100) ? 255 : int($red_percent * 2.55);
+    
     #my $red_percent = 255 - int($green_percent / 2);
 
     # Return the color value
