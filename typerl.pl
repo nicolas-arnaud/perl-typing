@@ -12,7 +12,7 @@ use List::Util qw( min max sum );
 
 use Time::HiRes qw( time );
 use FindBin qw($RealBin);
-use threads;
+
 
 use lib "$RealBin/lib";
 
@@ -63,6 +63,11 @@ sub main {
     }
 }
 
+sub clamp {
+    my ($n, $min, $max) = @_;
+    return max($min, min($max, $n));
+}
+
 sub start {
     my %char_times;
     my %incorrect_chars;
@@ -110,6 +115,7 @@ sub start {
 
     my $char_input = '';
     my $prev_char = '';
+    my $cpm = 0;
 
     for (my $n = 0; $n < scalar(@lines); $n++) {
         my $line = $lines[$n];
@@ -158,6 +164,9 @@ sub start {
             if (not exists $incorrect_chars{$char}) {
                 $incorrect_chars{$char} = 0;
             }
+            $total_chars++;
+            $char_time = time - $prev_time;
+            $total_time = time - $start_time;
 
             if ($char eq $char_input) {
                 if (exists $char_times{$char}) {
@@ -169,7 +178,12 @@ sub start {
                     $char = "↩️\n";
                 }
                 if ($fixed_chars eq 0) {
-                    print "\e[92m$char\e[0m";
+                    $cpm = 60 * $total_chars / $total_time;
+                    my $ratio = $cpm / ($bpm * 3/2);
+                    my $green = clamp(int(255 * $ratio), 0, 255);
+                    my $red = clamp(int(255 * (1 - $ratio)), 0, 255);
+
+                    printf "\e[38;2;%d;%d;0m%s\e[0m", $red, $green, $char;
                 } else {
                     print "\e[93m$char\e[0m";
                     $fixed_chars--;
@@ -182,7 +196,8 @@ sub start {
                 if ($char_input eq " ") {
                     print "\e[31m█\e[0m";
                 } else {
-                    print "\e[91m$char_input\e[0m";
+                    print "\e[31m$char_input\e[0m";
+
                 }
                 if ($char eq "\n") {
                     print " \e[1E\e[1G";
@@ -190,14 +205,11 @@ sub start {
                 $incorrect_chars{$char}++;
             }
 
-            $total_chars++;
-            $char_time = time - $prev_time;
             $prev_time = time;
             $prev_char = $char;
         }
     }
     
-    my $cpm = 60 * ($total_chars / (time - $start_time));
 
     print  "\n" . "-" x 80 . "\n";
     printf "Time: %.2f seconds\n", time - $start_time;
@@ -296,16 +308,16 @@ sub readChar {
 }
 
 sub get_color {
-    my ($avg_cpm, $min_cpm, $max_cpm, $key_cpm, $key_acc) = @_;
+    my ($cpm, $min_cpm, $max_cpm, $key_cpm, $key_acc) = @_;
 
-    $max_cpm = min($max_cpm, $avg_cpm * 2);
+    $max_cpm = min($max_cpm, $cpm * 2);
 
     # max > avg > min : green > yellow > red
     # green : 255, 255, 0
     # red : 0, 255, 255
 
-    my $green = min(($key_cpm - $min_cpm) / ($avg_cpm - $min_cpm), 1);
-    my $red = 1 - max(($key_cpm - $avg_cpm) / ($max_cpm - $avg_cpm), 0);
+    my $green = min(($key_cpm - $min_cpm) / ($cpm - $min_cpm), 1);
+    my $red = 1 - max(($key_cpm - $cpm) / ($max_cpm - $cpm), 0);
     my $green_percent = int($green * (max($key_acc, 90) - 90) * 10);
     my $red_percent = int($red * $key_acc);
     #my $red_percent = int((1 - $cpm_ratio) * 100 );

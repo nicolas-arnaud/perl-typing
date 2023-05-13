@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+no warnings 'utf8';
 
 use File::Which;
 use File::Which qw(which);
@@ -19,8 +20,7 @@ sub start {
     my $pid = fork();
 
     if ($pid == 0) {
-        my $duration = time;
-        $duration =  int(60000000 / $bpm);
+        my $duration =  int(60000000 / $bpm);
 
         my $sound_pid;
         while (1) {

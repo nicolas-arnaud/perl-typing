@@ -2,6 +2,15 @@
 A touch-typing trainer written with perl
 ![](./imgs/typing.gif)
 
+#Todo list:
+- [] lists names function of parameters.
+- [] add statistics after test linked to file used.
+- [] view statistics for each file
+- [] view statistics for each layout
+
+- [] fix layout help after backspace
+
+
 # Random texts
 ![](./imgs/random.gif)
 

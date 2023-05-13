@@ -34,8 +34,8 @@
     },
     "4 rows": {
         "qwerty": [
-            "`12345    67890-=\nqwerty    uiop[]\\\nasdfgh    jkl;'\nzxcvbn    m,./\n",
-            "~!@#$%    ^&*()_+\nQWERTY    UIOP{}|\nASDFGH    JKL:\"\nZXCVBN    M<>?\n"
+            "`12345    67890-=\nqwert    yuiop[]\\\nasdfg    hjkl;'\nzxcvb    nm,./\n",
+            "~!@#$%    ^&*()_+\nQWERT    YUIOP{}|\nASDFG      HJKL:\"\nZXCVB    NM<>?\n"
         ],
         "colemak": [
             "`12345    67890-=\nqwfpg    jluy;[]\\\narstd    hneio'\nzxcvb    km,./\n",
