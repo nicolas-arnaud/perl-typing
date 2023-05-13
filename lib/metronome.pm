@@ -12,16 +12,23 @@ sub start {
     my $dir = $_[1];
 
     if ($bpm eq 0) {
-        return;
+        return -1;
     }
 
     my $paplay_path = File::Which::which('paplay');
     my $pid = fork();
 
     if ($pid == 0) {
+        my $duration = time;
+        $duration =  int(60000000 / $bpm);
+
+        my $sound_pid;
         while (1) {
-            system $paplay_path, "$dir/res/metronome.oga"; 
-            Time::HiRes::usleep(60000000 / $bpm);
+            if (fork() == 0) {
+                system $paplay_path, "$dir/res/metronome.oga"; 
+                exit;
+            }
+            Time::HiRes::usleep($duration);
         }
         exit;
     }
@@ -39,6 +46,9 @@ sub set {
 
 sub stop {
     my $pid = $_[0];
+    if ($pid == -1) {
+        return;
+    }
     kill 9, $pid;
 }
 1;
