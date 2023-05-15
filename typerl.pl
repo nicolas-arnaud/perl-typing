@@ -9,11 +9,10 @@ use warnings;
 use Term::ReadKey;
 use Term::ReadLine;
 use List::Util qw( min max sum );
+use POSIX qw( strftime );
 
 use Time::HiRes qw( time );
 use FindBin qw($RealBin);
-
-
 use lib "$RealBin/lib";
 
 use wordlists;
@@ -24,9 +23,15 @@ use metronome;
 my $layout_name = "none";
 my $wordlist_file = "new";
 my $bpm = 0;
+my $export_file = "none";
 
 my @words;
 my $layout = "";
+
+# if argument is given, use it as the $export_file
+if (scalar(@ARGV) eq 1) {
+    $export_file = $ARGV[0];
+}
 
 main();
 
@@ -136,7 +141,10 @@ sub start {
 
             if ($char_input eq "\e") {
                 metronome::stop($metronome_pid);
-                main();
+                # move to the line after the last line
+                print "\e[" . (scalar(@lines) - $n) . "B";
+                $n = scalar(@lines);
+                last;
             } elsif ($char_input eq "\t") {
                 metronome::stop($metronome_pid);
                 start();
@@ -179,11 +187,15 @@ sub start {
                 }
                 if ($fixed_chars eq 0) {
                     $cpm = 60 * $total_chars / $total_time;
-                    my $ratio = $cpm / ($bpm * 3/2);
-                    my $green = clamp(int(255 * $ratio), 0, 255);
-                    my $red = clamp(int(255 * (1 - $ratio)), 0, 255);
+                    if ($bpm ne 0) {
+                        my $ratio = $cpm / ($bpm * 3/2);
+                        my $green = clamp(int(255 * $ratio), 0, 255);
+                        my $red = clamp(int(255 * (1 - $ratio)), 0, 255);
+                        printf "\e[38;2;%d;%d;0m%s\e[0m", $red, $green, $char;
+                    } else {
+                        print "\e[32m$char\e[0m";
+                    }
 
-                    printf "\e[38;2;%d;%d;0m%s\e[0m", $red, $green, $char;
                 } else {
                     print "\e[93m$char\e[0m";
                     $fixed_chars--;
@@ -210,18 +222,26 @@ sub start {
         }
     }
     
+    my $errors = $total_chars - $correct_chars;
+    my $accuracy = 100 * ($correct_chars / $total_chars);
 
-    print  "\n" . "-" x 80 . "\n";
-    printf "Time: %.2f seconds\n", time - $start_time;
-    printf "Speed: %.2f CPM\n", $cpm;
-    printf "Speed: %.2f WPM\n", 60 * (scalar(@words) / (time - $start_time));
-    print  "-" x 80 . "\n";
-    printf "Errors: %s\n", $total_chars - $correct_chars;
-    printf "Accuracy: %.2f%%\n", 100 * ($correct_chars / $total_chars);
-    print  "-" x 80 . "\n";
+    my $wpm = 60 * (scalar(@words) / (time - $start_time));
+
+    print  "\n┌" . "─" x 32 . "┐\n";
+    # table : |Time|CPM|WPM|Errors|Accuracy|
+    # align values per column
+    printf "│%-5s│%-4s│%-5s│%-6s│%-8s│\n",
+        "Time", "CPM", "WPM", "Errors", "Accuracy";
+    printf "├─────┼────┼─────┼──────┼────────┤\n";
+    printf "│%-5s│%-4s│%-5s│%-6s│%-8s│\n",
+        sprintf("%.0f", $total_time),
+        sprintf("%.0f", $cpm), sprintf("%.0f", $wpm), $errors, sprintf("%.2f", $accuracy) . "%";
+    printf "├─────┴────┴─────┴──────┴────────┴─────────────────────────────────────────────┐\n";
+
     $n = 0;
     my $min_cpm = 2000;
     my $max_cpm = 0;
+    export($wpm,$accuracy);
     foreach my $char (sort keys %char_times) {
         my $char_avg_time = sprintf("%.2f", average(@{$char_times{$char}}));
 
@@ -241,13 +261,22 @@ sub start {
 
     metronome::stop($metronome_pid);
 
+    # characters table: |Char|CPM|Correct|Total|Accuracy|
+    printf "│%-5s│%-4s│%-7s│%-5s│█",
+        "Char", "CPM", "Correct", "% Acc";
+    printf "│%-5s│%-4s│%-7s│%-5s│█",
+        "Char", "CPM", "Correct", "% Acc";
+    printf "│%-5s│%-4s│%-7s│%-5s│\n",
+        "Char", "CPM", "Correct", "% Acc";
+
+    $n = 0;
     foreach my $char (sort keys %char_times) {
         my $correct = scalar(@{$char_times{$char}});
         my $total = $correct + $incorrect_chars{$char};
         my $char_avg_time = sprintf("%.2f", average(@{$char_times{$char}}));
         my $char_accuracy = sprintf("%.2f", 100 * (1 - ($incorrect_chars{$char} / $total)));
 
-        my $char_cpm = 0;
+            my $char_cpm = 0;
         if ($char_avg_time ne '0.00') {
             $char_cpm = 60 / $char_avg_time;
         }
@@ -258,22 +287,37 @@ sub start {
         }
 
         if ($char eq "\n") {
-            $char = "↩️";
+            $char = "↩️    ";
         } elsif ($char eq " ") {
-            $char = "␣";
+            $char = "␣    ";
         }
 
-        printf "%s: %d CPM (%d/%d : %s%%)", $char, $char_cpm, $correct, $total, $char_accuracy;
+        printf "│%-5s│%-4s│%-7s│%-5s│", 
+            sprintf("%-5s", $char),
+            sprintf(
+                "%.0f", $char_cpm),
+            $correct . "/" . $total,
+            sprintf("%.1f", $char_accuracy);
+
         print "\e[0m";
 
-        if ($n % 3 == 0) {
+        if ($n % 3 == 2) {
             print "\n";
         } else {
-            print "\t";
+            print "█";
         }
         $n++;
     }
-    print  "\n" . "-" x 80 . "\n";
+    while ($n % 3 != 0) {
+        printf "│%-5s│%-4s│%-7s│%-5s│", " ", " ", " ", " ";
+        if ($n % 3 == 2) {
+            print "\n";
+        } else {
+            print "█";
+        }
+        $n++;
+    }
+    printf "└─────┴────┴───────┴─────┴┴┴─────┴────┴───────┴─────┴┴┴─────┴────┴───────┴─────┘\n";
     
 
     print "Press 'tab' to restart or 'esc' to return to main menu.\n";
@@ -289,6 +333,28 @@ sub start {
     }
 }
 
+# Save wpm and accuracy to datas.txt file
+# If file doesn't exist, create it and write to first line : time, wpm, accuracy
+# If file exists, append to the end of the file : $time, $wpm, $accuracy
+# wpm and accuracy are parameters and time is current time
+sub export {
+    if ($export_file eq "none") {
+        return;
+    }
+    my ($wpm, $accuracy) = @_;
+    my $time = strftime("%Y-%m-%d %H:%M:%S", localtime);
+    my $data = "$time; $wpm; " . $accuracy / 100 . "\n";
+    if (-e $export_file) {
+        open(my $fh, '>>', $export_file) or die "Could not open file '$export_file' $!";
+        print $fh $data;
+        close $fh;
+    } else {
+        open(my $fh, '>', $export_file) or die "Could not open file '$export_file' $!";
+        print $fh "time; wpm; accuracy\n";
+        print $fh $data;
+        close $fh;
+    }
+}
 
 # Function to calculate the average of a list of numbers
 sub average {
