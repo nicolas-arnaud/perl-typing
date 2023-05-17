@@ -40,9 +40,12 @@ If you add commonly used layouts, you're welcome to pull a request.
 
 # Dependencies
 The modules used are:
+- POSIX
+- FindBin
+- JSON
+- File::Which
+- Time::HiRes
 - Term::ReadKey
 - Term::ReadLine
 - Term::ReadLine::Gnu
-- Time::HiRes;
-- JSON
 - List::Util

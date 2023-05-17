@@ -2,6 +2,9 @@ NAME = typerl
 
 all: install
 
+init:
+	cpanm --installdeps .
+
 install: $(NAME).pl
 	mkdir -p ~/.local/etc/$(NAME)
 	cp -r ./* ~/.local/etc/$(NAME)/
